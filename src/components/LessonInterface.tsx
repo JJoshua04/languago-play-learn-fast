@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,34 +30,170 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
   const [isCorrect, setIsCorrect] = useState(false);
   const [lessonComplete, setLessonComplete] = useState(false);
 
-  // Sample questions - in a real app, these would come from an API
-  const questions: Question[] = [
-    {
-      id: 1,
-      type: 'multiple-choice',
-      question: 'How do you say "Hello" in Spanish?',
-      options: ['Hola', 'Adiós', 'Gracias', 'Por favor'],
-      correct: 0,
-      explanation: '"Hola" is the most common way to say hello in Spanish.'
-    },
-    {
-      id: 2,
-      type: 'translation',
-      question: 'What does "Gracias" mean?',
-      options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
-      correct: 2,
-      explanation: '"Gracias" means "Thank you" in English.'
-    },
-    {
-      id: 3,
-      type: 'multiple-choice',
-      question: 'How do you say "Good morning"?',
-      options: ['Buenas noches', 'Buenas tardes', 'Buenos días', 'Hasta luego'],
-      correct: 2,
-      explanation: '"Buenos días" is used to greet someone in the morning.'
-    }
-  ];
+  const getQuestionsForLanguage = (langCode: string): Question[] => {
+    const questionSets: { [key: string]: Question[] } = {
+      'es': [
+        {
+          id: 1,
+          type: 'multiple-choice',
+          question: 'How do you say "Hello" in Spanish?',
+          options: ['Hola', 'Adiós', 'Gracias', 'Por favor'],
+          correct: 0,
+          explanation: '"Hola" is the most common way to say hello in Spanish.'
+        },
+        {
+          id: 2,
+          type: 'translation',
+          question: 'What does "Gracias" mean?',
+          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
+          correct: 2,
+          explanation: '"Gracias" means "Thank you" in English.'
+        },
+        {
+          id: 3,
+          type: 'multiple-choice',
+          question: 'How do you say "Good morning" in Spanish?',
+          options: ['Buenas noches', 'Buenas tardes', 'Buenos días', 'Hasta luego'],
+          correct: 2,
+          explanation: '"Buenos días" is used to greet someone in the morning.'
+        }
+      ],
+      'fr': [
+        {
+          id: 1,
+          type: 'multiple-choice',
+          question: 'How do you say "Hello" in French?',
+          options: ['Bonjour', 'Au revoir', 'Merci', 'S\'il vous plaît'],
+          correct: 0,
+          explanation: '"Bonjour" is the standard greeting in French.'
+        },
+        {
+          id: 2,
+          type: 'translation',
+          question: 'What does "Merci" mean?',
+          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
+          correct: 2,
+          explanation: '"Merci" means "Thank you" in English.'
+        },
+        {
+          id: 3,
+          type: 'multiple-choice',
+          question: 'How do you say "Excuse me" in French?',
+          options: ['Bonjour', 'Excusez-moi', 'Bonsoir', 'Salut'],
+          correct: 1,
+          explanation: '"Excusez-moi" is the polite way to say excuse me in French.'
+        }
+      ],
+      'de': [
+        {
+          id: 1,
+          type: 'multiple-choice',
+          question: 'How do you say "Hello" in German?',
+          options: ['Hallo', 'Auf Wiedersehen', 'Danke', 'Bitte'],
+          correct: 0,
+          explanation: '"Hallo" is a common informal greeting in German.'
+        },
+        {
+          id: 2,
+          type: 'translation',
+          question: 'What does "Danke" mean?',
+          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
+          correct: 2,
+          explanation: '"Danke" means "Thank you" in English.'
+        },
+        {
+          id: 3,
+          type: 'multiple-choice',
+          question: 'How do you say "Good morning" in German?',
+          options: ['Guten Abend', 'Guten Tag', 'Guten Morgen', 'Gute Nacht'],
+          correct: 2,
+          explanation: '"Guten Morgen" is used to greet someone in the morning.'
+        }
+      ],
+      'it': [
+        {
+          id: 1,
+          type: 'multiple-choice',
+          question: 'How do you say "Hello" in Italian?',
+          options: ['Ciao', 'Arrivederci', 'Grazie', 'Prego'],
+          correct: 0,
+          explanation: '"Ciao" is a casual way to say hello in Italian.'
+        },
+        {
+          id: 2,
+          type: 'translation',
+          question: 'What does "Grazie" mean?',
+          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
+          correct: 2,
+          explanation: '"Grazie" means "Thank you" in English.'
+        },
+        {
+          id: 3,
+          type: 'multiple-choice',
+          question: 'How do you say "Good evening" in Italian?',
+          options: ['Buongiorno', 'Buonasera', 'Buonanotte', 'Ciao'],
+          correct: 1,
+          explanation: '"Buonasera" is used to greet someone in the evening.'
+        }
+      ],
+      'pt': [
+        {
+          id: 1,
+          type: 'multiple-choice',
+          question: 'How do you say "Hello" in Portuguese?',
+          options: ['Olá', 'Tchau', 'Obrigado', 'Por favor'],
+          correct: 0,
+          explanation: '"Olá" is the standard greeting in Portuguese.'
+        },
+        {
+          id: 2,
+          type: 'translation',
+          question: 'What does "Obrigado" mean?',
+          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
+          correct: 2,
+          explanation: '"Obrigado" means "Thank you" (said by men) in English.'
+        },
+        {
+          id: 3,
+          type: 'multiple-choice',
+          question: 'How do you say "Good afternoon" in Portuguese?',
+          options: ['Bom dia', 'Boa tarde', 'Boa noite', 'Até logo'],
+          correct: 1,
+          explanation: '"Boa tarde" is used to greet someone in the afternoon.'
+        }
+      ],
+      'ja': [
+        {
+          id: 1,
+          type: 'multiple-choice',
+          question: 'How do you say "Hello" in Japanese?',
+          options: ['こんにちは (Konnichiwa)', 'さようなら (Sayounara)', 'ありがとう (Arigatou)', 'すみません (Sumimasen)'],
+          correct: 0,
+          explanation: '"こんにちは (Konnichiwa)" is the standard greeting in Japanese.'
+        },
+        {
+          id: 2,
+          type: 'translation',
+          question: 'What does "ありがとう (Arigatou)" mean?',
+          options: ['Hello', 'Goodbye', 'Thank you', 'Excuse me'],
+          correct: 2,
+          explanation: '"ありがとう (Arigatou)" means "Thank you" in English.'
+        },
+        {
+          id: 3,
+          type: 'multiple-choice',
+          question: 'How do you say "Good morning" in Japanese?',
+          options: ['こんばんは (Konbanwa)', 'こんにちは (Konnichiwa)', 'おはよう (Ohayou)', 'おやすみ (Oyasumi)'],
+          correct: 2,
+          explanation: '"おはよう (Ohayou)" is used to greet someone in the morning.'
+        }
+      ]
+    };
 
+    return questionSets[langCode] || questionSets['es'];
+  };
+
+  const questions = getQuestionsForLanguage(language);
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   const handleAnswerSelect = (answerIndex: number) => {
