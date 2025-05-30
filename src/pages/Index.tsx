@@ -4,6 +4,19 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { LessonInterface } from '@/components/LessonInterface';
 import { UserProgress } from '@/components/UserProgress';
 import { Header } from '@/components/Header';
+import { ProgressPanel } from '@/components/ProgressPanel';
+
+interface ProgressData {
+  language: string;
+  completedLessons: number;
+  userStats: {
+    streak: number;
+    xp: number;
+    hearts: number;
+    level: number;
+  };
+  timestamp: string;
+}
 
 const Index = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
@@ -13,6 +26,7 @@ const Index = () => {
     hearts: 5,
     level: 8
   });
+  const [progressPanelOpen, setProgressPanelOpen] = useState(false);
 
   const updateUserStats = (xpGained: number, heartsLost: number = 0) => {
     setUserStats(prev => ({
@@ -22,9 +36,23 @@ const Index = () => {
     }));
   };
 
+  const handleProgressImport = (data: ProgressData) => {
+    setSelectedLanguage(data.language);
+    setUserStats(data.userStats);
+    setProgressPanelOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Header />
+      
+      <ProgressPanel
+        selectedLanguage={selectedLanguage}
+        userStats={userStats}
+        onProgressImport={handleProgressImport}
+        isOpen={progressPanelOpen}
+        onToggle={() => setProgressPanelOpen(!progressPanelOpen)}
+      />
       
       <main className="container mx-auto px-4 py-8">
         {!selectedLanguage ? (
