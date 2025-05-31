@@ -2,13 +2,15 @@
 import React, { useState } from 'react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { LessonInterface } from '@/components/LessonInterface';
+import { LessonSelector } from '@/components/LessonSelector';
 import { UserProgress } from '@/components/UserProgress';
 import { Header } from '@/components/Header';
 import { ProgressPanel } from '@/components/ProgressPanel';
+import { Lesson } from '@/data/lessonData';
 
 interface ProgressData {
   language: string;
-  completedLessons: number;
+  completedLessons: number[];
   userStats: {
     streak: number;
     xp: number;
@@ -20,6 +22,8 @@ interface ProgressData {
 
 const Index = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [userStats, setUserStats] = useState({
     streak: 3,
     xp: 1250,
@@ -29,17 +33,47 @@ const Index = () => {
   const [progressPanelOpen, setProgressPanelOpen] = useState(false);
 
   const updateUserStats = (xpGained: number, heartsLost: number = 0) => {
-    setUserStats(prev => ({
-      ...prev,
-      xp: prev.xp + xpGained,
-      hearts: Math.max(0, prev.hearts - heartsLost)
-    }));
+    setUserStats(prev => {
+      const newXP = prev.xp + xpGained;
+      const newLevel = Math.floor(newXP / 500) + 1;
+      
+      return {
+        ...prev,
+        xp: newXP,
+        hearts: Math.max(0, prev.hearts - heartsLost),
+        level: newLevel
+      };
+    });
+  };
+
+  const handleLessonComplete = (lessonId: number, score: number) => {
+    if (!completedLessons.includes(lessonId)) {
+      setCompletedLessons(prev => [...prev, lessonId]);
+    }
+    
+    // Update streak if it's a good score
+    if (score >= 80) {
+      setUserStats(prev => ({
+        ...prev,
+        streak: prev.streak + 1
+      }));
+    }
   };
 
   const handleProgressImport = (data: ProgressData) => {
     setSelectedLanguage(data.language);
     setUserStats(data.userStats);
+    setCompletedLessons(data.completedLessons);
     setProgressPanelOpen(false);
+  };
+
+  const generateProgressData = (): ProgressData => {
+    return {
+      language: selectedLanguage || '',
+      completedLessons,
+      userStats,
+      timestamp: new Date().toISOString()
+    };
   };
 
   return (
@@ -49,6 +83,7 @@ const Index = () => {
       <ProgressPanel
         selectedLanguage={selectedLanguage}
         userStats={userStats}
+        completedLessons={completedLessons}
         onProgressImport={handleProgressImport}
         isOpen={progressPanelOpen}
         onToggle={() => setProgressPanelOpen(!progressPanelOpen)}
@@ -68,13 +103,24 @@ const Index = () => {
             </div>
             <LanguageSelector onLanguageSelect={setSelectedLanguage} />
           </div>
-        ) : (
+        ) : currentLesson ? (
           <div className="max-w-6xl mx-auto">
             <UserProgress stats={userStats} language={selectedLanguage} />
             <LessonInterface 
-              language={selectedLanguage} 
-              onStatsUpdate={updateUserStats}
+              lesson={currentLesson}
+              onLessonComplete={handleLessonComplete}
+              onBackToLessons={() => setCurrentLesson(null)}
               hearts={userStats.hearts}
+              onStatsUpdate={updateUserStats}
+            />
+          </div>
+        ) : (
+          <div className="max-w-6xl mx-auto">
+            <UserProgress stats={userStats} language={selectedLanguage} />
+            <LessonSelector
+              language={selectedLanguage}
+              completedLessons={completedLessons}
+              onLessonSelect={setCurrentLesson}
             />
           </div>
         )}

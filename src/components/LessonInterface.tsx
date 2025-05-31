@@ -1,199 +1,34 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, XCircle, Volume2 } from 'lucide-react';
-
-interface Question {
-  id: number;
-  type: 'multiple-choice' | 'translation' | 'listening';
-  question: string;
-  options: string[];
-  correct: number;
-  explanation?: string;
-}
+import { CheckCircle, XCircle, Volume2, ArrowLeft, Trophy, BookOpen } from 'lucide-react';
+import { Lesson, Question } from '@/data/lessonData';
 
 interface LessonInterfaceProps {
-  language: string;
-  onStatsUpdate: (xp: number, heartsLost?: number) => void;
+  lesson: Lesson;
+  onLessonComplete: (lessonId: number, score: number) => void;
+  onBackToLessons: () => void;
   hearts: number;
+  onStatsUpdate: (xp: number, heartsLost?: number) => void;
 }
 
 export const LessonInterface: React.FC<LessonInterfaceProps> = ({ 
-  language, 
-  onStatsUpdate, 
-  hearts 
+  lesson,
+  onLessonComplete,
+  onBackToLessons,
+  hearts,
+  onStatsUpdate
 }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [lessonComplete, setLessonComplete] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
 
-  const getQuestionsForLanguage = (langCode: string): Question[] => {
-    const questionSets: { [key: string]: Question[] } = {
-      'es': [
-        {
-          id: 1,
-          type: 'multiple-choice',
-          question: 'How do you say "Hello" in Spanish?',
-          options: ['Hola', 'Adiós', 'Gracias', 'Por favor'],
-          correct: 0,
-          explanation: '"Hola" is the most common way to say hello in Spanish.'
-        },
-        {
-          id: 2,
-          type: 'translation',
-          question: 'What does "Gracias" mean?',
-          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
-          correct: 2,
-          explanation: '"Gracias" means "Thank you" in English.'
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          question: 'How do you say "Good morning" in Spanish?',
-          options: ['Buenas noches', 'Buenas tardes', 'Buenos días', 'Hasta luego'],
-          correct: 2,
-          explanation: '"Buenos días" is used to greet someone in the morning.'
-        }
-      ],
-      'fr': [
-        {
-          id: 1,
-          type: 'multiple-choice',
-          question: 'How do you say "Hello" in French?',
-          options: ['Bonjour', 'Au revoir', 'Merci', 'S\'il vous plaît'],
-          correct: 0,
-          explanation: '"Bonjour" is the standard greeting in French.'
-        },
-        {
-          id: 2,
-          type: 'translation',
-          question: 'What does "Merci" mean?',
-          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
-          correct: 2,
-          explanation: '"Merci" means "Thank you" in English.'
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          question: 'How do you say "Excuse me" in French?',
-          options: ['Bonjour', 'Excusez-moi', 'Bonsoir', 'Salut'],
-          correct: 1,
-          explanation: '"Excusez-moi" is the polite way to say excuse me in French.'
-        }
-      ],
-      'de': [
-        {
-          id: 1,
-          type: 'multiple-choice',
-          question: 'How do you say "Hello" in German?',
-          options: ['Hallo', 'Auf Wiedersehen', 'Danke', 'Bitte'],
-          correct: 0,
-          explanation: '"Hallo" is a common informal greeting in German.'
-        },
-        {
-          id: 2,
-          type: 'translation',
-          question: 'What does "Danke" mean?',
-          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
-          correct: 2,
-          explanation: '"Danke" means "Thank you" in English.'
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          question: 'How do you say "Good morning" in German?',
-          options: ['Guten Abend', 'Guten Tag', 'Guten Morgen', 'Gute Nacht'],
-          correct: 2,
-          explanation: '"Guten Morgen" is used to greet someone in the morning.'
-        }
-      ],
-      'it': [
-        {
-          id: 1,
-          type: 'multiple-choice',
-          question: 'How do you say "Hello" in Italian?',
-          options: ['Ciao', 'Arrivederci', 'Grazie', 'Prego'],
-          correct: 0,
-          explanation: '"Ciao" is a casual way to say hello in Italian.'
-        },
-        {
-          id: 2,
-          type: 'translation',
-          question: 'What does "Grazie" mean?',
-          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
-          correct: 2,
-          explanation: '"Grazie" means "Thank you" in English.'
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          question: 'How do you say "Good evening" in Italian?',
-          options: ['Buongiorno', 'Buonasera', 'Buonanotte', 'Ciao'],
-          correct: 1,
-          explanation: '"Buonasera" is used to greet someone in the evening.'
-        }
-      ],
-      'pt': [
-        {
-          id: 1,
-          type: 'multiple-choice',
-          question: 'How do you say "Hello" in Portuguese?',
-          options: ['Olá', 'Tchau', 'Obrigado', 'Por favor'],
-          correct: 0,
-          explanation: '"Olá" is the standard greeting in Portuguese.'
-        },
-        {
-          id: 2,
-          type: 'translation',
-          question: 'What does "Obrigado" mean?',
-          options: ['Hello', 'Goodbye', 'Thank you', 'Please'],
-          correct: 2,
-          explanation: '"Obrigado" means "Thank you" (said by men) in English.'
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          question: 'How do you say "Good afternoon" in Portuguese?',
-          options: ['Bom dia', 'Boa tarde', 'Boa noite', 'Até logo'],
-          correct: 1,
-          explanation: '"Boa tarde" is used to greet someone in the afternoon.'
-        }
-      ],
-      'ja': [
-        {
-          id: 1,
-          type: 'multiple-choice',
-          question: 'How do you say "Hello" in Japanese?',
-          options: ['こんにちは (Konnichiwa)', 'さようなら (Sayounara)', 'ありがとう (Arigatou)', 'すみません (Sumimasen)'],
-          correct: 0,
-          explanation: '"こんにちは (Konnichiwa)" is the standard greeting in Japanese.'
-        },
-        {
-          id: 2,
-          type: 'translation',
-          question: 'What does "ありがとう (Arigatou)" mean?',
-          options: ['Hello', 'Goodbye', 'Thank you', 'Excuse me'],
-          correct: 2,
-          explanation: '"ありがとう (Arigatou)" means "Thank you" in English.'
-        },
-        {
-          id: 3,
-          type: 'multiple-choice',
-          question: 'How do you say "Good morning" in Japanese?',
-          options: ['こんばんは (Konbanwa)', 'こんにちは (Konnichiwa)', 'おはよう (Ohayou)', 'おやすみ (Oyasumi)'],
-          correct: 2,
-          explanation: '"おはよう (Ohayou)" is used to greet someone in the morning.'
-        }
-      ]
-    };
-
-    return questionSets[langCode] || questionSets['es'];
-  };
-
-  const questions = getQuestionsForLanguage(language);
+  const questions = lesson.questions;
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -209,7 +44,8 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
     setShowResult(true);
     
     if (correct) {
-      onStatsUpdate(10); // +10 XP for correct answer
+      setCorrectAnswers(prev => prev + 1);
+      onStatsUpdate(lesson.isUnitTest ? 15 : 10); // More XP for unit tests
     } else {
       onStatsUpdate(0, 1); // -1 heart for incorrect answer
     }
@@ -217,8 +53,13 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
 
   const handleContinue = () => {
     if (currentQuestion + 1 >= questions.length) {
+      const score = Math.round((correctAnswers / questions.length) * 100);
       setLessonComplete(true);
-      onStatsUpdate(50); // Bonus XP for completing lesson
+      onLessonComplete(lesson.id, score);
+      
+      // Bonus XP for completing lesson
+      const bonusXP = lesson.isUnitTest ? 100 : 50;
+      onStatsUpdate(bonusXP);
     } else {
       setCurrentQuestion(prev => prev + 1);
       setSelectedAnswer(null);
@@ -231,38 +72,71 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
     setSelectedAnswer(null);
     setShowResult(false);
     setLessonComplete(false);
+    setCorrectAnswers(0);
   };
 
   if (lessonComplete) {
+    const score = Math.round((correctAnswers / questions.length) * 100);
+    const totalXP = correctAnswers * (lesson.isUnitTest ? 15 : 10) + (lesson.isUnitTest ? 100 : 50);
+    
     return (
       <Card className="max-w-2xl mx-auto p-8 text-center bg-white/80 backdrop-blur-sm">
         <div className="mb-6">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Lesson Complete!</h2>
-          <p className="text-gray-600">Great job! You've earned 80 XP total.</p>
+          {lesson.isUnitTest ? (
+            <Trophy className="w-16 h-16 text-purple-500 mx-auto mb-4" />
+          ) : (
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          )}
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {lesson.isUnitTest ? 'Unit Test Complete!' : 'Lesson Complete!'}
+          </h2>
+          <p className="text-gray-600">
+            {lesson.isUnitTest 
+              ? `Great job on the unit test! Score: ${score}%`
+              : `Well done! You've earned ${totalXP} XP total.`
+            }
+          </p>
         </div>
         
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">3/3</div>
-            <div className="text-sm text-gray-600">Questions</div>
+            <div className="text-2xl font-bold text-green-600">
+              {correctAnswers}/{questions.length}
+            </div>
+            <div className="text-sm text-gray-600">Correct</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">+80</div>
+            <div className={`text-2xl font-bold ${lesson.isUnitTest ? 'text-purple-600' : 'text-blue-600'}`}>
+              {score}%
+            </div>
+            <div className="text-sm text-gray-600">Score</div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${lesson.isUnitTest ? 'text-purple-600' : 'text-blue-600'}`}>
+              +{totalXP}
+            </div>
             <div className="text-sm text-gray-600">XP Earned</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">1</div>
-            <div className="text-sm text-gray-600">Streak</div>
           </div>
         </div>
         
-        <Button 
-          onClick={restartLesson}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-        >
-          Practice Again
-        </Button>
+        <div className="space-y-3">
+          <Button 
+            onClick={onBackToLessons}
+            className={lesson.isUnitTest 
+              ? "w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+              : "w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            }
+          >
+            Continue Learning
+          </Button>
+          <Button 
+            onClick={restartLesson}
+            variant="outline"
+            className="w-full"
+          >
+            Practice Again
+          </Button>
+        </div>
       </Card>
     );
   }
@@ -270,6 +144,26 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            onClick={onBackToLessons}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Lessons</span>
+          </Button>
+          
+          <div className="flex items-center space-x-2">
+            {lesson.isUnitTest ? (
+              <Trophy className="w-5 h-5 text-purple-500" />
+            ) : (
+              <BookOpen className="w-5 h-5 text-blue-500" />
+            )}
+            <span className="font-semibold text-gray-800">{lesson.title}</span>
+          </div>
+        </div>
+        
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600">
             Question {currentQuestion + 1} of {questions.length}
@@ -291,6 +185,12 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
               </Button>
             )}
           </div>
+          
+          {questions[currentQuestion].type === 'fill-blank' && (
+            <p className="text-sm text-gray-600 mb-4">
+              Choose the correct word to fill in the blank.
+            </p>
+          )}
         </div>
 
         <div className="space-y-3 mb-8">
@@ -358,14 +258,20 @@ export const LessonInterface: React.FC<LessonInterfaceProps> = ({
             <Button 
               onClick={handleSubmit}
               disabled={selectedAnswer === null || hearts === 0}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className={lesson.isUnitTest 
+                ? "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              }
             >
               Check
             </Button>
           ) : (
             <Button 
               onClick={handleContinue}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className={lesson.isUnitTest 
+                ? "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                : "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              }
             >
               Continue
             </Button>

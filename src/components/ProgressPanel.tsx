@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ProgressData {
   language: string;
-  completedLessons: number;
+  completedLessons: number[];
   userStats: {
     streak: number;
     xp: number;
@@ -27,6 +27,7 @@ interface ProgressPanelProps {
     hearts: number;
     level: number;
   };
+  completedLessons: number[];
   onProgressImport: (data: ProgressData) => void;
   isOpen: boolean;
   onToggle: () => void;
@@ -35,6 +36,7 @@ interface ProgressPanelProps {
 export const ProgressPanel: React.FC<ProgressPanelProps> = ({
   selectedLanguage,
   userStats,
+  completedLessons,
   onProgressImport,
   isOpen,
   onToggle
@@ -48,7 +50,7 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
     
     const progressData: ProgressData = {
       language: selectedLanguage,
-      completedLessons: Math.floor(userStats.xp / 80), // Assuming 80 XP per lesson
+      completedLessons,
       userStats,
       timestamp: new Date().toISOString()
     };
@@ -96,7 +98,7 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
     try {
       const decodedData = JSON.parse(atob(importText.trim()));
       
-      if (!decodedData.language || !decodedData.userStats) {
+      if (!decodedData.language || !decodedData.userStats || !Array.isArray(decodedData.completedLessons)) {
         throw new Error('Invalid progress data format');
       }
       
@@ -199,6 +201,9 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
             <div className="pt-2 border-t">
               <p className="text-xs text-gray-500">
                 Current: {selectedLanguage.toUpperCase()} • Level {userStats.level} • {userStats.xp} XP
+              </p>
+              <p className="text-xs text-gray-500">
+                Completed: {completedLessons.length} lessons
               </p>
             </div>
           )}
