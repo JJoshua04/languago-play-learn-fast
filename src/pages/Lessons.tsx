@@ -63,10 +63,10 @@ const Lessons = () => {
   const languages = [
     { code: 'es', name: 'Spanish', flag: '🇪🇸', lessons: 12 },
     { code: 'fr', name: 'French', flag: '🇫🇷', lessons: 12 },
-    { code: 'de', name: 'German', flag: '🇩🇪', lessons: 3 },
-    { code: 'it', name: 'Italian', flag: '🇮🇹', lessons: 3 },
-    { code: 'pt', name: 'Portuguese', flag: '🇵🇹', lessons: 3 },
-    { code: 'ja', name: 'Japanese', flag: '🇯🇵', lessons: 3 }
+    { code: 'de', name: 'German', flag: '🇩🇪', lessons: 9 },
+    { code: 'it', name: 'Italian', flag: '🇮🇹', lessons: 9 },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹', lessons: 9 },
+    { code: 'ja', name: 'Japanese', flag: '🇯🇵', lessons: 9 }
   ];
 
   return (

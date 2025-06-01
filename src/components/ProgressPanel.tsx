@@ -55,11 +55,13 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
       timestamp: new Date().toISOString()
     };
     
+    console.log('Generating progress data:', progressData);
     return btoa(JSON.stringify(progressData));
   };
 
   const handleExport = async () => {
     const progressString = generateProgressString();
+    console.log('Export string:', progressString);
     try {
       await navigator.clipboard.writeText(progressString);
       setCopied(true);
@@ -97,6 +99,7 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
 
     try {
       const decodedData = JSON.parse(atob(importText.trim()));
+      console.log('Importing progress data:', decodedData);
       
       if (!decodedData.language || !decodedData.userStats || !Array.isArray(decodedData.completedLessons)) {
         throw new Error('Invalid progress data format');
@@ -109,6 +112,7 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
         description: `Successfully restored progress for ${decodedData.language}.`,
       });
     } catch (err) {
+      console.error('Import error:', err);
       toast({
         title: "Import Failed",
         description: "Invalid progress string. Please check and try again.",
