@@ -46,22 +46,44 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
   const { toast } = useToast();
 
   const generateProgressString = () => {
-    if (!selectedLanguage) return '';
+    if (!selectedLanguage) {
+      toast({
+        title: "No Language Selected",
+        description: "Please select a language first before exporting progress.",
+        variant: "destructive",
+      });
+      return '';
+    }
     
     const progressData: ProgressData = {
       language: selectedLanguage,
-      completedLessons,
-      userStats,
+      completedLessons: [...completedLessons], // Create a copy
+      userStats: { ...userStats }, // Create a copy
       timestamp: new Date().toISOString()
     };
     
     console.log('Generating progress data:', progressData);
-    return btoa(JSON.stringify(progressData));
+    
+    try {
+      const jsonString = JSON.stringify(progressData);
+      const base64String = btoa(jsonString);
+      console.log('Generated base64 string:', base64String);
+      return base64String;
+    } catch (error) {
+      console.error('Error generating progress string:', error);
+      toast({
+        title: "Export Error",
+        description: "Failed to generate progress string.",
+        variant: "destructive",
+      });
+      return '';
+    }
   };
 
   const handleExport = async () => {
     const progressString = generateProgressString();
-    console.log('Export string:', progressString);
+    if (!progressString) return;
+    
     try {
       await navigator.clipboard.writeText(progressString);
       setCopied(true);
@@ -71,24 +93,44 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
+      console.error('Clipboard error:', err);
       // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea');
-      textArea.value = progressString;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      toast({
-        title: "Progress Exported!",
-        description: "Your progress has been copied to clipboard.",
-      });
-      setTimeout(() => setCopied(false), 2000);
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = progressString;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          setCopied(true);
+          toast({
+            title: "Progress Exported!",
+            description: "Your progress has been copied to clipboard.",
+          });
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error('Copy command failed');
+        }
+      } catch (fallbackError) {
+        console.error('Fallback copy error:', fallbackError);
+        toast({
+          title: "Export Failed",
+          description: "Could not copy to clipboard. Please copy the string manually.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleImport = () => {
-    if (!importText.trim()) {
+    const trimmedText = importText.trim();
+    
+    if (!trimmedText) {
       toast({
         title: "Error",
         description: "Please enter a progress string to import.",
@@ -98,24 +140,70 @@ export const ProgressPanel: React.FC<ProgressPanelProps> = ({
     }
 
     try {
-      const decodedData = JSON.parse(atob(importText.trim()));
-      console.log('Importing progress data:', decodedData);
+      console.log('Attempting to import:', trimmedText);
       
-      if (!decodedData.language || !decodedData.userStats || !Array.isArray(decodedData.completedLessons)) {
-        throw new Error('Invalid progress data format');
+      // Decode base64
+      const decodedString = atob(trimmedText);
+      console.log('Decoded string:', decodedString);
+      
+      // Parse JSON
+      const decodedData = JSON.parse(decodedString);
+      console.log('Parsed data:', decodedData);
+      
+      // Validate structure
+      if (!decodedData || typeof decodedData !== 'object') {
+        throw new Error('Invalid data structure');
       }
       
+      if (!decodedData.language || typeof decodedData.language !== 'string') {
+        throw new Error('Missing or invalid language');
+      }
+      
+      if (!decodedData.userStats || typeof decodedData.userStats !== 'object') {
+        throw new Error('Missing or invalid user stats');
+      }
+      
+      if (!Array.isArray(decodedData.completedLessons)) {
+        throw new Error('Missing or invalid completed lessons');
+      }
+      
+      // Validate userStats structure
+      const requiredStats = ['streak', 'xp', 'hearts', 'level'];
+      for (const stat of requiredStats) {
+        if (typeof decodedData.userStats[stat] !== 'number') {
+          throw new Error(`Invalid or missing stat: ${stat}`);
+        }
+      }
+      
+      // All validation passed, import the data
       onProgressImport(decodedData);
       setImportText('');
+      
       toast({
         title: "Progress Imported!",
         description: `Successfully restored progress for ${decodedData.language}.`,
       });
+      
     } catch (err) {
       console.error('Import error:', err);
+      
+      let errorMessage = "Invalid progress string. Please check and try again.";
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Invalid character')) {
+          errorMessage = "Invalid base64 string format.";
+        } else if (err.message.includes('JSON')) {
+          errorMessage = "Invalid JSON data in progress string.";
+        } else if (err.message.includes('Invalid data structure') || 
+                   err.message.includes('Missing') || 
+                   err.message.includes('Invalid')) {
+          errorMessage = `Data validation failed: ${err.message}`;
+        }
+      }
+      
       toast({
         title: "Import Failed",
-        description: "Invalid progress string. Please check and try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
