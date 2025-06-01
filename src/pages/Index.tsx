@@ -27,10 +27,10 @@ const Index = () => {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [userStats, setUserStats] = useState({
-    streak: 3,
-    xp: 250, // Starting XP that results in level 1
+    streak: 0,
+    xp: 0,
     hearts: 5,
-    level: 1 // Start at level 1
+    level: 1
   });
   const [progressPanelOpen, setProgressPanelOpen] = useState(false);
 

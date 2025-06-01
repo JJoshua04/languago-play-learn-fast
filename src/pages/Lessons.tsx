@@ -8,9 +8,9 @@ import { BookOpen, Play, Lock, CheckCircle } from 'lucide-react';
 
 const Lessons = () => {
   const languages = [
-    { code: 'es', name: 'Spanish', flag: '🇪🇸', lessons: 12, completed: 8 },
-    { code: 'fr', name: 'French', flag: '🇫🇷', lessons: 12, completed: 4 },
-    { code: 'de', name: 'German', flag: '🇩🇪', lessons: 3, completed: 1 },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸', lessons: 12, completed: 0 },
+    { code: 'fr', name: 'French', flag: '🇫🇷', lessons: 12, completed: 0 },
+    { code: 'de', name: 'German', flag: '🇩🇪', lessons: 3, completed: 0 },
     { code: 'it', name: 'Italian', flag: '🇮🇹', lessons: 3, completed: 0 },
     { code: 'pt', name: 'Portuguese', flag: '🇵🇹', lessons: 3, completed: 0 },
     { code: 'ja', name: 'Japanese', flag: '🇯🇵', lessons: 3, completed: 0 }
