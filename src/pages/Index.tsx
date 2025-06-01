@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { LessonInterface } from '@/components/LessonInterface';
@@ -33,6 +32,19 @@ const Index = () => {
     level: 1
   });
   const [progressPanelOpen, setProgressPanelOpen] = useState(false);
+
+  // Save progress to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedLanguage) {
+      const progressData: ProgressData = {
+        language: selectedLanguage,
+        completedLessons,
+        userStats,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('languago-progress', JSON.stringify(progressData));
+    }
+  }, [selectedLanguage, completedLessons, userStats]);
 
   // Check for language parameter in URL
   useEffect(() => {

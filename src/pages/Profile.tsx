@@ -1,12 +1,76 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Trophy, Flame, Heart, Star, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+
+interface UserStats {
+  streak: number;
+  xp: number;
+  hearts: number;
+  level: number;
+}
+
+interface ProgressData {
+  language: string;
+  completedLessons: number[];
+  userStats: UserStats;
+  timestamp: string;
+}
 
 const Profile = () => {
+  const location = useLocation();
+  const [userStats, setUserStats] = useState<UserStats>({
+    streak: 0,
+    xp: 0,
+    hearts: 5,
+    level: 1
+  });
+  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
+  const [currentLanguage, setCurrentLanguage] = useState<string>('');
+
+  // Load progress from localStorage or URL params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const progressParam = params.get('progress');
+    
+    if (progressParam) {
+      try {
+        const progressData: ProgressData = JSON.parse(atob(progressParam));
+        setUserStats(progressData.userStats);
+        setCompletedLessons(progressData.completedLessons);
+        setCurrentLanguage(progressData.language);
+      } catch (error) {
+        console.log('Could not parse progress data from URL');
+      }
+    } else {
+      // Try to load from localStorage
+      const savedProgress = localStorage.getItem('languago-progress');
+      if (savedProgress) {
+        try {
+          const progressData: ProgressData = JSON.parse(savedProgress);
+          setUserStats(progressData.userStats);
+          setCompletedLessons(progressData.completedLessons);
+          setCurrentLanguage(progressData.language);
+        } catch (error) {
+          console.log('Could not parse saved progress data');
+        }
+      }
+    }
+  }, [location]);
+
+  const getLanguageProgress = (langCode: string) => {
+    if (langCode === currentLanguage) {
+      const totalLessons = langCode === 'es' || langCode === 'fr' ? 12 : 3;
+      return Math.round((completedLessons.length / totalLessons) * 100);
+    }
+    return 0;
+  };
+
+  const studyTimeToday = Math.floor(completedLessons.length * 3.5); // Estimate ~3.5 min per lesson
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Header />
@@ -45,8 +109,8 @@ const Profile = () => {
                 <Trophy className="w-6 h-6 text-yellow-500" />
                 <h3 className="text-lg font-semibold">Level</h3>
               </div>
-              <p className="text-3xl font-bold text-blue-600">8</p>
-              <p className="text-sm text-gray-600">1250 XP earned</p>
+              <p className="text-3xl font-bold text-blue-600">{userStats.level}</p>
+              <p className="text-sm text-gray-600">{userStats.xp} XP earned</p>
             </Card>
 
             <Card className="p-6 bg-white/80 backdrop-blur-sm">
@@ -54,7 +118,7 @@ const Profile = () => {
                 <Flame className="w-6 h-6 text-orange-500" />
                 <h3 className="text-lg font-semibold">Streak</h3>
               </div>
-              <p className="text-3xl font-bold text-orange-600">3</p>
+              <p className="text-3xl font-bold text-orange-600">{userStats.streak}</p>
               <p className="text-sm text-gray-600">days in a row</p>
             </Card>
 
@@ -63,7 +127,7 @@ const Profile = () => {
                 <Heart className="w-6 h-6 text-red-500" />
                 <h3 className="text-lg font-semibold">Hearts</h3>
               </div>
-              <p className="text-3xl font-bold text-red-600">5</p>
+              <p className="text-3xl font-bold text-red-600">{userStats.hearts}</p>
               <p className="text-sm text-gray-600">out of 5</p>
             </Card>
 
@@ -72,7 +136,7 @@ const Profile = () => {
                 <Star className="w-6 h-6 text-purple-500" />
                 <h3 className="text-lg font-semibold">Achievements</h3>
               </div>
-              <p className="text-3xl font-bold text-purple-600">12</p>
+              <p className="text-3xl font-bold text-purple-600">{Math.floor(userStats.level * 1.5)}</p>
               <p className="text-sm text-gray-600">badges earned</p>
             </Card>
 
@@ -81,7 +145,7 @@ const Profile = () => {
                 <Calendar className="w-6 h-6 text-green-500" />
                 <h3 className="text-lg font-semibold">Study Time</h3>
               </div>
-              <p className="text-3xl font-bold text-green-600">45</p>
+              <p className="text-3xl font-bold text-green-600">{studyTimeToday}</p>
               <p className="text-sm text-gray-600">minutes today</p>
             </Card>
           </div>
@@ -91,19 +155,22 @@ const Profile = () => {
             <h3 className="text-xl font-semibold mb-4">Languages You're Learning</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[
-                { code: 'es', name: 'Spanish', flag: '🇪🇸', progress: 65 },
-                { code: 'fr', name: 'French', flag: '🇫🇷', progress: 30 },
-                { code: 'de', name: 'German', flag: '🇩🇪', progress: 10 },
-                { code: 'it', name: 'Italian', flag: '🇮🇹', progress: 5 },
-                { code: 'pt', name: 'Portuguese', flag: '🇵🇹', progress: 0 },
-                { code: 'ja', name: 'Japanese', flag: '🇯🇵', progress: 0 }
-              ].map((lang) => (
-                <div key={lang.code} className="text-center p-4 rounded-lg bg-gray-50">
-                  <div className="text-3xl mb-2">{lang.flag}</div>
-                  <h4 className="font-medium text-sm">{lang.name}</h4>
-                  <p className="text-xs text-gray-600">{lang.progress}% complete</p>
-                </div>
-              ))}
+                { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+                { code: 'fr', name: 'French', flag: '🇫🇷' },
+                { code: 'de', name: 'German', flag: '🇩🇪' },
+                { code: 'it', name: 'Italian', flag: '🇮🇹' },
+                { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
+                { code: 'ja', name: 'Japanese', flag: '🇯🇵' }
+              ].map((lang) => {
+                const progress = getLanguageProgress(lang.code);
+                return (
+                  <div key={lang.code} className="text-center p-4 rounded-lg bg-gray-50">
+                    <div className="text-3xl mb-2">{lang.flag}</div>
+                    <h4 className="font-medium text-sm">{lang.name}</h4>
+                    <p className="text-xs text-gray-600">{progress}% complete</p>
+                  </div>
+                );
+              })}
             </div>
           </Card>
         </div>
