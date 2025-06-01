@@ -15,8 +15,8 @@ interface UserProgressProps {
 }
 
 export const UserProgress: React.FC<UserProgressProps> = ({ stats, language }) => {
-  const xpToNextLevel = 1500;
-  const progressPercentage = (stats.xp % 500) / 5;
+  // Progress calculation: Show progress within current level (0-500 XP per level)
+  const progressPercentage = (stats.xp % 500) / 5; // Convert to percentage (0-100)
 
   const getLanguageFlag = (code: string) => {
     const flags: { [key: string]: string } = {
@@ -26,6 +26,14 @@ export const UserProgress: React.FC<UserProgressProps> = ({ stats, language }) =
     return flags[code] || '🌍';
   };
 
+  const getLanguageName = (code: string) => {
+    const names: { [key: string]: string } = {
+      'es': 'Spanish', 'fr': 'French', 'de': 'German',
+      'it': 'Italian', 'pt': 'Portuguese', 'ja': 'Japanese'
+    };
+    return names[code] || code.toUpperCase();
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
       <Card className="p-4 bg-white/80 backdrop-blur-sm">
@@ -33,7 +41,7 @@ export const UserProgress: React.FC<UserProgressProps> = ({ stats, language }) =
           <div className="text-2xl">{getLanguageFlag(language)}</div>
           <div>
             <p className="text-sm text-gray-600">Learning</p>
-            <p className="font-semibold capitalize">{language === 'es' ? 'Spanish' : language === 'fr' ? 'French' : language === 'de' ? 'German' : language === 'it' ? 'Italian' : language === 'pt' ? 'Portuguese' : 'Japanese'}</p>
+            <p className="font-semibold">{getLanguageName(language)}</p>
           </div>
         </div>
       </Card>

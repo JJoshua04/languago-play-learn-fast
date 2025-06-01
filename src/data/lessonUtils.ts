@@ -2,15 +2,18 @@
 import { LanguageLessons } from './types';
 import { spanishLessons } from './languages/spanish';
 import { frenchLessons } from './languages/french';
+import { germanLessons } from './languages/german';
+import { italianLessons } from './languages/italian';
+import { portugueseLessons } from './languages/portuguese';
+import { japaneseLessons } from './languages/japanese';
 
 export const languageLessons: LanguageLessons = {
   'es': spanishLessons,
   'fr': frenchLessons,
-  // Additional languages can be added here
-  'de': [], // German lessons would be imported here
-  'it': [], // Italian lessons would be imported here
-  'pt': [], // Portuguese lessons would be imported here
-  'ja': [], // Japanese lessons would be imported here
+  'de': germanLessons,
+  'it': italianLessons,
+  'pt': portugueseLessons,
+  'ja': japaneseLessons,
 };
 
 export const getLanguageLessons = (languageCode: string) => {

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { LessonInterface } from '@/components/LessonInterface';
 import { LessonSelector } from '@/components/LessonSelector';
@@ -7,6 +7,7 @@ import { UserProgress } from '@/components/UserProgress';
 import { Header } from '@/components/Header';
 import { ProgressPanel } from '@/components/ProgressPanel';
 import { Lesson } from '@/data/lessonData';
+import { useLocation } from 'react-router-dom';
 
 interface ProgressData {
   language: string;
@@ -21,20 +22,31 @@ interface ProgressData {
 }
 
 const Index = () => {
+  const location = useLocation();
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [userStats, setUserStats] = useState({
     streak: 3,
-    xp: 1250,
+    xp: 250, // Starting XP that results in level 1
     hearts: 5,
-    level: 8
+    level: 1 // Start at level 1
   });
   const [progressPanelOpen, setProgressPanelOpen] = useState(false);
+
+  // Check for language parameter in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const langParam = params.get('lang');
+    if (langParam) {
+      setSelectedLanguage(langParam);
+    }
+  }, [location]);
 
   const updateUserStats = (xpGained: number, heartsLost: number = 0) => {
     setUserStats(prev => {
       const newXP = prev.xp + xpGained;
+      // Level calculation: Level 1 starts at 0-499 XP, Level 2 at 500-999, etc.
       const newLevel = Math.floor(newXP / 500) + 1;
       
       return {
